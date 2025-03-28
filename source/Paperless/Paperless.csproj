@@ -20,6 +20,10 @@
     <PackageReference Include="Ardalis.SmartEnum.SystemTextJson"/>
     <PackageReference Include="NodaTime"/>
     <PackageReference Include="NodaTime.Serialization.SystemTextJson"/>
+    <PackageReference Include="Roslynator.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="System.Text.Json"/>
   </ItemGroup>
 

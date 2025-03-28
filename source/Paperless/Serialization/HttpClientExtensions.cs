@@ -19,7 +19,7 @@ namespace Paperless.Serialization;
 
 internal static class HttpClientExtensions
 {
-  internal static async IAsyncEnumerable<TResult> GetPaginated<TResult>(
+  internal static async IAsyncEnumerable<TResult> GetPaginatedAsync<TResult>(
     this HttpClient httpClient,
     Uri requestUri,
     JsonTypeInfo<PaginatedList<TResult>> typeInfo,

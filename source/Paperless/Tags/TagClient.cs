@@ -32,35 +32,35 @@ public sealed class TagClient : ITagClient
   }
 
   /// <inheritdoc />
-  public IAsyncEnumerable<Tag> GetAll(CancellationToken cancellationToken = default) =>
-    GetAllCore(Routes.Tags.Uri, cancellationToken);
+  public IAsyncEnumerable<Tag> GetAllAsync(CancellationToken cancellationToken = default) =>
+    GetAllCoreAsync(Routes.Tags.Uri, cancellationToken);
 
   /// <inheritdoc />
-  public IAsyncEnumerable<Tag> GetAll(int pageSize, CancellationToken cancellationToken = default) =>
-    GetAllCore(Routes.Tags.PagedUri(pageSize), cancellationToken);
+  public IAsyncEnumerable<Tag> GetAllAsync(int pageSize, CancellationToken cancellationToken = default) =>
+    GetAllCoreAsync(Routes.Tags.PagedUri(pageSize), cancellationToken);
 
   /// <inheritdoc />
-  public Task<Tag?> Get(int id, CancellationToken cancellationToken = default) => _httpClient.GetFromJsonAsync(
+  public Task<Tag?> GetAsync(int id, CancellationToken cancellationToken = default) => _httpClient.GetFromJsonAsync(
     Routes.Tags.IdUri(id),
     _options.GetTypeInfo<Tag>(),
     cancellationToken);
 
   /// <inheritdoc />
-  public Task<Tag> Create(TagCreation tag) => _httpClient.PostAsJsonAsync(
+  public Task<Tag> CreateAsync(TagCreation tag) => _httpClient.PostAsJsonAsync(
     Routes.Tags.Uri,
     tag,
     _options.GetTypeInfo<TagCreation>(),
     _options.GetTypeInfo<Tag>());
 
   /// <inheritdoc />
-  public async Task Delete(int id)
+  public async Task DeleteAsync(int id)
   {
     using HttpResponseMessage? response = await _httpClient.DeleteAsync(Routes.Tags.IdUri(id)).ConfigureAwait(false);
     await response.EnsureSuccessStatusCodeAsync().ConfigureAwait(false);
   }
 
-  private IAsyncEnumerable<Tag> GetAllCore(Uri requestUri, CancellationToken cancellationToken) =>
-    _httpClient.GetPaginated(
+  private IAsyncEnumerable<Tag> GetAllCoreAsync(Uri requestUri, CancellationToken cancellationToken) =>
+    _httpClient.GetPaginatedAsync(
       requestUri,
       _options.GetTypeInfo<PaginatedList<Tag>>(),
       cancellationToken);

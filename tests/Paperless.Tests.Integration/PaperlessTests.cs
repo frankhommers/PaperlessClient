@@ -46,8 +46,8 @@ public abstract class PaperlessTests
   }
 
   [TearDown]
-  public async Task TearDown() => await _serviceScope.DisposeAsync();
+  public async Task TearDownAsync() => await _serviceScope.DisposeAsync();
 
   [OneTimeTearDown]
-  public async Task OneTimeTearDown() => await _serviceProvider.DisposeAsync();
+  public async Task OneTimeTearDownAsync() => await _serviceProvider.DisposeAsync();
 }

@@ -24,32 +24,32 @@ public sealed class DocumentClientTests(PaperlessFixture paperlessFixture) : Pap
 {
   [Test]
   [Order(1)]
-  public async Task GetAll_ShouldReturnExpected()
+  public async Task GetAll_ShouldReturnExpectedAsync()
   {
-    List<Document> documents = await Client.Documents.GetAll().ToListAsync();
+    List<Document> documents = await Client.Documents.GetAllAsync().ToListAsync();
 
     documents.Should().BeEmpty();
   }
 
   [Test]
-  public async Task GetAll_PageSizeShouldNotChangeResult()
+  public async Task GetAll_PageSizeShouldNotChangeResultAsync()
   {
-    List<Document> documents = await Client.Documents.GetAll().ToListAsync();
-    List<Document> pageSizeDocuments = await Client.Documents.GetAll(1).ToListAsync();
+    List<Document> documents = await Client.Documents.GetAllAsync().ToListAsync();
+    List<Document> pageSizeDocuments = await Client.Documents.GetAllAsync(1).ToListAsync();
 
     documents.Should().BeEquivalentTo(pageSizeDocuments);
   }
 
   [Test]
-  public async Task Create()
+  public async Task CreateAsync()
   {
     const string documentName = "Lorem Ipsum.txt";
 
-    Correspondent correspondent = await Client.Correspondents.Create(new("Foo"));
+    Correspondent correspondent = await Client.Correspondents.CreateAsync(new("Foo"));
     List<Tag> tags = new();
     foreach (TagCreation tag in new List<TagCreation> { new("Receipt"), new("Bill") })
     {
-      tags.Add(await Client.Tags.Create(tag));
+      tags.Add(await Client.Tags.CreateAsync(tag));
     }
 
     await using Stream documentStream = typeof(DocumentClientTests).GetResource(documentName);
@@ -62,7 +62,7 @@ public sealed class DocumentClientTests(PaperlessFixture paperlessFixture) : Pap
       TagIds = tags.Select(tag => tag.Id).ToArray(),
     };
 
-    DocumentCreationResult result = await Client.Documents.Create(documentCreation);
+    DocumentCreationResult result = await Client.Documents.CreateAsync(documentCreation);
 
     if (PaperlessVersion < new Version(2, 0))
     {
@@ -71,14 +71,14 @@ public sealed class DocumentClientTests(PaperlessFixture paperlessFixture) : Pap
     }
 
     int id = result.Should().BeOfType<DocumentCreated>().Subject.Id;
-    Document document = (await Client.Documents.Get(id))!;
-    List<Document> documents = await Client.Documents.GetAll().ToListAsync();
-    DocumentMetadata metadata = await Client.Documents.GetMetadata(id);
+    Document document = (await Client.Documents.GetAsync(id))!;
+    List<Document> documents = await Client.Documents.GetAllAsync().ToListAsync();
+    DocumentMetadata metadata = await Client.Documents.GetMetadataAsync(id);
 
     using AssertionScope scope = new();
 
     Instant currentTime = SystemClock.Instance.GetCurrentInstant();
-    string content = await typeof(DocumentClientTests).ReadResource(documentName);
+    string content = await typeof(DocumentClientTests).ReadResourceAsync(documentName);
 
     documents.Should().ContainSingle(d => d.Id == id).Which.Should().BeEquivalentTo(document);
     document.Should().NotBeNull();
@@ -108,27 +108,27 @@ public sealed class DocumentClientTests(PaperlessFixture paperlessFixture) : Pap
 
     DocumentUpdate update = new()
       { Title = $"{document.Title}1" };
-    Document updatedDocument = await Client.Documents.Update(id, update);
+    Document updatedDocument = await Client.Documents.UpdateAsync(id, update);
 
     updatedDocument.Title.Should().Be(update.Title);
 
-    await Client.Correspondents.Delete(correspondent.Id);
+    await Client.Correspondents.DeleteAsync(correspondent.Id);
     foreach (Tag tag in tags)
     {
-      await Client.Tags.Delete(tag.Id);
+      await Client.Tags.DeleteAsync(tag.Id);
     }
 
-    await Client.Documents.Delete(id);
+    await Client.Documents.DeleteAsync(id);
 
     await FluentActions
-      .Awaiting(() => Client.Documents.Get(id))
+      .Awaiting(() => Client.Documents.GetAsync(id))
       .Should()
       .ThrowExactlyAsync<HttpRequestException>()
       .WithMessage("Response status code does not indicate success: 404 (Not Found).");
   }
 
   [Test]
-  public async Task CreateDuplicate()
+  public async Task CreateDuplicateAsync()
   {
     if (PaperlessVersion < new Version(2, 0))
     {
@@ -149,7 +149,7 @@ public sealed class DocumentClientTests(PaperlessFixture paperlessFixture) : Pap
             Title = "Lorem Ipsum",
           };
 
-          return Client.Documents.Create(creation);
+          return Client.Documents.CreateAsync(creation);
         });
 
     DocumentCreationResult[] results = await Task.WhenAll(tasks);
@@ -166,11 +166,11 @@ public sealed class DocumentClientTests(PaperlessFixture paperlessFixture) : Pap
             .Be(
               $"{documentName}: Not consuming {documentName}: It is a duplicate of Lorem Ipsum (#{created.Id})."));
 
-    await Client.Documents.Delete(created.Id);
+    await Client.Documents.DeleteAsync(created.Id);
   }
 
   [Test]
-  public async Task Download()
+  public async Task DownloadAsync()
   {
     if (PaperlessVersion < new Version(2, 0))
     {
@@ -182,51 +182,51 @@ public sealed class DocumentClientTests(PaperlessFixture paperlessFixture) : Pap
     await using Stream documentStream = typeof(DocumentClientTests).GetResource(documentName);
     DocumentCreation documentCreation = new(documentStream, documentName);
 
-    DocumentCreationResult createResult = await Client.Documents.Create(documentCreation);
+    DocumentCreationResult createResult = await Client.Documents.CreateAsync(documentCreation);
     int id = createResult.Should().BeOfType<DocumentCreated>().Subject.Id;
 
-    string expectedDocumentContent = await typeof(DocumentClientTests).ReadResource(documentName);
+    string expectedDocumentContent = await typeof(DocumentClientTests).ReadResourceAsync(documentName);
     string expectedPartOfFileName = "Lorem Ipsum 3";
 
     // Download
-    DocumentContent documentDownload = await Client.Documents.Download(id);
+    DocumentContent documentDownload = await Client.Documents.DownloadAsync(id);
     documentDownload.MediaTypeHeaderValue.MediaType.Should().Be("text/plain");
     documentDownload.ContentDisposition!.FileName.Should().Contain(expectedPartOfFileName);
 
-    string downloadContent = await ReadStreamContentAsString(documentDownload.Content);
+    string downloadContent = await ReadStreamContentAsStringAsync(documentDownload.Content);
     downloadContent.Should().BeEquivalentTo(expectedDocumentContent);
 
     // Download Original
-    DocumentContent documentOriginalDownload = await Client.Documents.DownloadOriginal(id);
+    DocumentContent documentOriginalDownload = await Client.Documents.DownloadOriginalAsync(id);
     documentOriginalDownload.MediaTypeHeaderValue.MediaType.Should().Be("text/plain");
     documentOriginalDownload.ContentDisposition!.FileName.Should().Contain(expectedPartOfFileName);
 
-    string downloadOriginalContent = await ReadStreamContentAsString(documentOriginalDownload.Content);
+    string downloadOriginalContent = await ReadStreamContentAsStringAsync(documentOriginalDownload.Content);
     downloadOriginalContent.Should().BeEquivalentTo(expectedDocumentContent);
 
     // Download Preview
-    DocumentContent downloadPreview = await Client.Documents.DownloadPreview(id);
+    DocumentContent downloadPreview = await Client.Documents.DownloadPreviewAsync(id);
     downloadPreview.MediaTypeHeaderValue.MediaType.Should().Be("text/plain");
     downloadPreview.ContentDisposition!.FileName.Should().Contain(expectedPartOfFileName);
 
-    string downloadPreviewContent = await ReadStreamContentAsString(downloadPreview.Content);
+    string downloadPreviewContent = await ReadStreamContentAsStringAsync(downloadPreview.Content);
     downloadPreviewContent.Should().BeEquivalentTo(expectedDocumentContent);
 
     // Download Preview Original
-    DocumentContent downloadPreviewOriginal = await Client.Documents.DownloadPreview(id);
+    DocumentContent downloadPreviewOriginal = await Client.Documents.DownloadPreviewAsync(id);
     downloadPreviewOriginal.MediaTypeHeaderValue.MediaType.Should().Be("text/plain");
     downloadPreviewOriginal.ContentDisposition!.FileName.Should().Contain(expectedPartOfFileName);
 
-    string downloadPreviewOrignalContent = await ReadStreamContentAsString(downloadPreviewOriginal.Content);
+    string downloadPreviewOrignalContent = await ReadStreamContentAsStringAsync(downloadPreviewOriginal.Content);
     downloadPreviewOrignalContent.Should().BeEquivalentTo(expectedDocumentContent);
 
     // Download thumbnail
-    DocumentContent downloadThumbnail = await Client.Documents.DownloadThumbnail(id);
+    DocumentContent downloadThumbnail = await Client.Documents.DownloadThumbnailAsync(id);
     downloadThumbnail.MediaTypeHeaderValue.MediaType.Should().Be("image/webp");
   }
 
   [Test]
-  public async Task CustomFields()
+  public async Task CustomFieldsAsync()
   {
     if (PaperlessVersion < new Version(2, 0))
     {
@@ -254,24 +254,24 @@ public sealed class DocumentClientTests(PaperlessFixture paperlessFixture) : Pap
 
     foreach (CustomFieldCreation customFieldCreation in fieldCreations)
     {
-      await Client.Documents.CreateCustomField(customFieldCreation);
+      await Client.Documents.CreateCustomFieldAsync(customFieldCreation);
     }
 
-    List<CustomField> customFields = await Client.Documents.GetCustomFields().ToListAsync();
+    List<CustomField> customFields = await Client.Documents.GetCustomFieldsAsync().ToListAsync();
     customFields.Should().HaveCount(fieldCreations.Count);
 
-    List<CustomField> paginatedCustomFields = await Client.Documents.GetCustomFields(1).ToListAsync();
+    List<CustomField> paginatedCustomFields = await Client.Documents.GetCustomFieldsAsync(1).ToListAsync();
     paginatedCustomFields.Should().BeEquivalentTo(customFields);
 
     await using Stream documentStream = typeof(DocumentClientTests).GetResource(documentName);
     DocumentCreation documentCreation = new(documentStream, documentName);
 
-    DocumentCreationResult result = await Client.Documents.Create(documentCreation);
+    DocumentCreationResult result = await Client.Documents.CreateAsync(documentCreation);
 
     SerializerOptions.CustomFields.Clear();
 
     int id = result.Should().BeOfType<DocumentCreated>().Subject.Id;
-    Document<CustomFields>? document = (await Client.Documents.Get<CustomFields>(id))!;
+    Document<CustomFields>? document = (await Client.Documents.GetAsync<CustomFields>(id))!;
 
     document.CustomFields.Should().BeNull("cannot create document with custom fields");
 
@@ -296,16 +296,16 @@ public sealed class DocumentClientTests(PaperlessFixture paperlessFixture) : Pap
     }
 
     SerializerOptions.CustomFields.Clear();
-    document = await Client.Documents.Update(id, update);
+    document = await Client.Documents.UpdateAsync(id, update);
 
     document.CustomFields.Should().BeEquivalentTo(update.CustomFields);
 
     SerializerOptions.CustomFields.Clear();
-    List<Document<CustomFields>> documents = await Client.Documents.GetAll<CustomFields>().ToListAsync();
+    List<Document<CustomFields>> documents = await Client.Documents.GetAllAsync<CustomFields>().ToListAsync();
     documents.Should().ContainSingle(d => d.Id == id).Which.Should().BeEquivalentTo(document);
   }
 
-  private async Task<string> ReadStreamContentAsString(Stream stream)
+  private async Task<string> ReadStreamContentAsStringAsync(Stream stream)
   {
     await using (stream)
     {

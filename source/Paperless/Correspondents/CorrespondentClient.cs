@@ -32,37 +32,37 @@ public sealed class CorrespondentClient : ICorrespondentClient
   }
 
   /// <inheritdoc />
-  public IAsyncEnumerable<Correspondent> GetAll(CancellationToken cancellationToken = default) =>
-    GetAllCore(Routes.Correspondents.Uri, cancellationToken);
+  public IAsyncEnumerable<Correspondent> GetAllAsync(CancellationToken cancellationToken = default) =>
+    GetAllCoreAsync(Routes.Correspondents.Uri, cancellationToken);
 
   /// <inheritdoc />
-  public IAsyncEnumerable<Correspondent> GetAll(int pageSize, CancellationToken cancellationToken = default) =>
-    GetAllCore(Routes.Correspondents.PagedUri(pageSize), cancellationToken);
+  public IAsyncEnumerable<Correspondent> GetAllAsync(int pageSize, CancellationToken cancellationToken = default) =>
+    GetAllCoreAsync(Routes.Correspondents.PagedUri(pageSize), cancellationToken);
 
   /// <inheritdoc />
-  public Task<Correspondent?> Get(int id, CancellationToken cancellationToken = default) =>
+  public Task<Correspondent?> GetAsync(int id, CancellationToken cancellationToken = default) =>
     _httpClient.GetFromJsonAsync(
       Routes.Correspondents.IdUri(id),
       _options.GetTypeInfo<Correspondent>(),
       cancellationToken);
 
   /// <inheritdoc />
-  public Task<Correspondent> Create(CorrespondentCreation correspondent) => _httpClient.PostAsJsonAsync(
+  public Task<Correspondent> CreateAsync(CorrespondentCreation correspondent) => _httpClient.PostAsJsonAsync(
     Routes.Correspondents.Uri,
     correspondent,
     _options.GetTypeInfo<CorrespondentCreation>(),
     _options.GetTypeInfo<Correspondent>());
 
   /// <inheritdoc />
-  public async Task Delete(int id)
+  public async Task DeleteAsync(int id)
   {
     using HttpResponseMessage? response =
       await _httpClient.DeleteAsync(Routes.Correspondents.IdUri(id)).ConfigureAwait(false);
     await response.EnsureSuccessStatusCodeAsync().ConfigureAwait(false);
   }
 
-  private IAsyncEnumerable<Correspondent> GetAllCore(Uri requestUri, CancellationToken cancellationToken) =>
-    _httpClient.GetPaginated(
+  private IAsyncEnumerable<Correspondent> GetAllCoreAsync(Uri requestUri, CancellationToken cancellationToken) =>
+    _httpClient.GetPaginatedAsync(
       requestUri,
       _options.GetTypeInfo<PaginatedList<Correspondent>>(),
       cancellationToken);

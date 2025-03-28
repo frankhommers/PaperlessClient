@@ -17,11 +17,11 @@ public interface ITaskClient
   /// <summary>Gets all tasks.</summary>
   /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
   /// <returns>A collection of all tasks.</returns>
-  Task<List<PaperlessTask>> GetAll(CancellationToken cancellationToken = default);
+  Task<List<PaperlessTask>> GetAllAsync(CancellationToken cancellationToken = default);
 
   /// <summary>Gets the task with the specific id.</summary>
   /// <param name="taskId">The id of the task.</param>
   /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
   /// <returns>The task with the specified id if it exists; otherwise <c>null</c>.</returns>
-  Task<PaperlessTask?> Get(Guid taskId, CancellationToken cancellationToken = default);
+  Task<PaperlessTask?> GetAsync(Guid taskId, CancellationToken cancellationToken = default);
 }

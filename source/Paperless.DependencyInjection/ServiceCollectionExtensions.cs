@@ -67,8 +67,11 @@ public static class ServiceCollectionExtensions
 #if NETSTANDARD2_0
   [SuppressMessage("Trimming", "IL2026", Justification = $"{nameof(PaperlessOptions)} contains only system types.")]
 #else
-	[UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification =
- $"{nameof(PaperlessOptions)} contains only system types.")]
+	[UnconditionalSuppressMessage(
+    "ReflectionAnalysis", 
+    "IL2026", 
+    Justification = $"{nameof(PaperlessOptions)} contains only system types.")
+  ]
 #endif
   public static IHttpClientBuilder AddPaperlessClient(
     this IServiceCollection serviceCollection,

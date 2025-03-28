@@ -16,9 +16,9 @@ namespace Paperless.Tests.Integration.Tags;
 public sealed class TagClientTests(PaperlessFixture paperlessFixture) : PaperlessTests(paperlessFixture)
 {
   [Test]
-  public async Task CreateGetDelete()
+  public async Task CreateGetDeleteAsync()
   {
-    Tag createdTag = await Client.Tags.Create(
+    Tag createdTag = await Client.Tags.CreateAsync(
       new("Foo bar")
       {
         Match = "foo",
@@ -27,9 +27,9 @@ public sealed class TagClientTests(PaperlessFixture paperlessFixture) : Paperles
         IsInboxTag = true,
       });
 
-    Tag tag = (await Client.Tags.Get(createdTag.Id))!;
-    List<Tag> tags = await Client.Tags.GetAll().ToListAsync();
-    List<Tag> paginatedTags = await Client.Tags.GetAll(1).ToListAsync();
+    Tag tag = (await Client.Tags.GetAsync(createdTag.Id))!;
+    List<Tag> tags = await Client.Tags.GetAllAsync().ToListAsync();
+    List<Tag> paginatedTags = await Client.Tags.GetAllAsync(1).ToListAsync();
 
     using (new AssertionScope())
     {
@@ -48,8 +48,8 @@ public sealed class TagClientTests(PaperlessFixture paperlessFixture) : Paperles
       tag.DocumentCount.Should().Be(0);
     }
 
-    await Client.Tags.Delete(createdTag.Id);
-    tags = await Client.Tags.GetAll().ToListAsync();
+    await Client.Tags.DeleteAsync(createdTag.Id);
+    tags = await Client.Tags.GetAllAsync().ToListAsync();
 
     tags.Should().NotContainEquivalentOf(createdTag);
   }

@@ -24,7 +24,7 @@ internal static class TypeExtensions
     throw new MissingManifestResourceException($"Could not find {resourceName} is namespace {type.Namespace}");
   }
 
-  internal static async Task<string> ReadResource(this Type type, string resourceName)
+  internal static async Task<string> ReadResourceAsync(this Type type, string resourceName)
   {
     await using Stream? stream = type.GetResource(resourceName);
     using StreamReader? streamReader = new(stream);

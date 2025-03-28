@@ -43,8 +43,8 @@ public sealed class MinimalExampleTests : PaperlessTests
   }
 
   [Test]
-  public async Task ShouldNotThrow() => await FluentActions
-    .Awaiting(() => _paperlessClient.Correspondents.GetAll().ToListAsync().AsTask())
+  public async Task ShouldNotThrowAsync() => await FluentActions
+    .Awaiting(() => _paperlessClient.Correspondents.GetAllAsync().ToListAsync().AsTask())
     .Should()
     .NotThrowAsync();
 }
