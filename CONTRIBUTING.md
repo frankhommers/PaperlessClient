@@ -1,12 +1,12 @@
-# How to contribute to PaperlessDotNet
+# How to contribute to PaperlessClient
 
 ### Did you find a bug?
 
 1. **Ensure the bug was not already reported** by searching on GitHub under
-   [Issues](https://github.com/VMelnalksnis/PaperlessDotNet/issues?q=is%3Aissue+label%3Abug).
+   [Issues](https://github.com/frankhommers/PaperlessClient/issues?q=is%3Aissue+label%3Abug).
 
 2. If you're unable to find an issue addressing the problem,
-   [open a new one](https://github.com/VMelnalksnis/PaperlessDotNet/issues/new?assignees=VMelnalksnis&labels=bug&template=bug_report.md).
+   [open a new one](https://github.com/frankhommers/PaperlessClient/issues/new?assignees=frankhommers&labels=bug&template=bug_report.md).
    Be sure to include a **title and clear description**,
    as much relevant information as possible,
    and, if possible, a **code sample** or an **executable test case**
@@ -15,8 +15,8 @@
 ### Do you want to request a new feature or change?
 
 1. **Ensure the feature is not already in progress or rejected** by searching on GitHub under
-   [Issues](https://github.com/VMelnalksnis/PaperlessDotNet/issues?q=is%3Aissue+label%3Aenhancement).
+   [Issues](https://github.com/frankhommers/PaperlessClient/issues?q=is%3Aissue+label%3Aenhancement).
    If it exists, make sure to add a +1 reaction to show your interest in the feature.
 
 2. If you're unable to find an issue regarding this feature,
-   [open a new one](https://github.com/VMelnalksnis/PaperlessDotNet/issues/new?assignees=VMelnalksnis&labels=enhancement&template=feature_request.md).
+   [open a new one](https://github.com/frankhommers/PaperlessClient/issues/new?assignees=frankhommers&labels=enhancement&template=feature_request.md).

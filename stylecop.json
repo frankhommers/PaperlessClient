@@ -1,37 +1,36 @@
 {
-	"$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
-	"settings": {
-		"documentationRules": {
-			"companyName": "Valters Melnalksnis",
-			"copyrightText": "Copyright 2022 {companyName}\r\nLicensed under the {licenseName}.\r\nSee {licenseFile} file in the project root for full license information.",
-			"variables": {
-				"licenseName": "Apache License 2.0",
-				"licenseFile": "LICENSE"
-			},
-			"excludeFromPunctuationCheck": [],
-			"xmlHeader": false,
-			"documentationCulture": "en-US",
-			"documentExposedElements": true,
-			"documentInterfaces": true,
-			"documentInternalElements": true,
-			"documentPrivateElements": false,
-			"documentPrivateFields": false,
-			"fileNamingConvention": "stylecop",
-			"headerDecoration": ""
-		},
-		"indentation": {
-			"indentationSize": 4,
-			"tabSize": 4,
-			"useTabs": true
-		},
-		"layoutRules": {
-			"allowConsecutiveUsings": true,
-			"newlineAtEndOfFile": "require"
-		},
-		"orderingRules": {
-			"systemUsingDirectivesFirst": true,
-			"usingDirectivesPlacement": "outsideNamespace",
-			"blankLinesBetweenUsingGroups": "require"
-		}
-	}
+  "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
+  "settings": {
+    "documentationRules": {
+      "copyrightText": "Copyright 2022 Valters Melnalksnis\r\nLicensed under the Apache License 2.0.\r\nSee LICENSE file in the project root for full license information.\r\n---\r\nCopyright 2025 Frank Hommers",
+      "variables": {
+        "licenseName": "Apache License 2.0",
+        "licenseFile": "LICENSE"
+      },
+      "excludeFromPunctuationCheck": [],
+      "xmlHeader": false,
+      "documentationCulture": "en-US",
+      "documentExposedElements": true,
+      "documentInterfaces": true,
+      "documentInternalElements": true,
+      "documentPrivateElements": false,
+      "documentPrivateFields": false,
+      "fileNamingConvention": "stylecop",
+      "headerDecoration": ""
+    },
+    "indentation": {
+      "indentationSize": 2,
+      "tabSize": 2,
+      "useTabs": false
+    },
+    "layoutRules": {
+      "allowConsecutiveUsings": true,
+      "newlineAtEndOfFile": "require"
+    },
+    "orderingRules": {
+      "systemUsingDirectivesFirst": true,
+      "usingDirectivesPlacement": "outsideNamespace",
+      "blankLinesBetweenUsingGroups": "require"
+    }
+  }
 }
