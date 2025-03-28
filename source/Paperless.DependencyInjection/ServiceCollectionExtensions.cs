@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,8 +32,8 @@ public static class ServiceCollectionExtensions
 
   static ServiceCollectionExtensions()
   {
-    var assemblyName = typeof(IPaperlessClient).Assembly.GetName();
-    var assemblyShortName = assemblyName.Name ?? assemblyName.FullName.Split(',').First();
+    AssemblyName assemblyName = typeof(IPaperlessClient).Assembly.GetName();
+    string assemblyShortName = assemblyName.Name ?? assemblyName.FullName.Split(',').First();
     _userAgent = new(assemblyShortName, assemblyName.Version?.ToString());
   }
 
@@ -88,7 +89,7 @@ public static class ServiceCollectionExtensions
     .AddSingleton<PaperlessJsonSerializerOptions>(
       provider =>
       {
-        var options = new PaperlessJsonSerializerOptions(provider.GetRequiredService<IDateTimeZoneProvider>());
+        PaperlessJsonSerializerOptions options = new(provider.GetRequiredService<IDateTimeZoneProvider>());
         config?.Invoke(options);
         return options;
       })
@@ -96,38 +97,39 @@ public static class ServiceCollectionExtensions
     .AddScoped<ITaskClient, TaskClient>(
       provider =>
       {
-        var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient(PaperlessOptions.Name);
-        var options = provider.GetRequiredService<PaperlessJsonSerializerOptions>();
+        HttpClient httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient(PaperlessOptions.Name);
+        PaperlessJsonSerializerOptions options = provider.GetRequiredService<PaperlessJsonSerializerOptions>();
         return new(httpClient, options);
       })
     .AddScoped<ICorrespondentClient, CorrespondentClient>(
       provider =>
       {
-        var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient(PaperlessOptions.Name);
-        var options = provider.GetRequiredService<PaperlessJsonSerializerOptions>();
+        HttpClient httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient(PaperlessOptions.Name);
+        PaperlessJsonSerializerOptions options = provider.GetRequiredService<PaperlessJsonSerializerOptions>();
         return new(httpClient, options);
       })
     .AddScoped<IDocumentClient, DocumentClient>(
       provider =>
       {
-        var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient(PaperlessOptions.Name);
-        var options = provider.GetRequiredService<PaperlessJsonSerializerOptions>();
-        var taskClient = provider.GetRequiredService<ITaskClient>();
-        var paperlessOptions = provider.GetRequiredService<IOptionsMonitor<PaperlessOptions>>();
+        HttpClient httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient(PaperlessOptions.Name);
+        PaperlessJsonSerializerOptions options = provider.GetRequiredService<PaperlessJsonSerializerOptions>();
+        ITaskClient taskClient = provider.GetRequiredService<ITaskClient>();
+        IOptionsMonitor<PaperlessOptions> paperlessOptions =
+          provider.GetRequiredService<IOptionsMonitor<PaperlessOptions>>();
         return new(httpClient, options, taskClient, paperlessOptions.CurrentValue.TaskPollingDelay);
       })
     .AddScoped<ITagClient, TagClient>(
       provider =>
       {
-        var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient(PaperlessOptions.Name);
-        var options = provider.GetRequiredService<PaperlessJsonSerializerOptions>();
+        HttpClient httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient(PaperlessOptions.Name);
+        PaperlessJsonSerializerOptions options = provider.GetRequiredService<PaperlessJsonSerializerOptions>();
         return new(httpClient, options);
       })
     .AddHttpClient(
       PaperlessOptions.Name,
       (provider, client) =>
       {
-        var options = provider.GetRequiredService<IOptionsMonitor<PaperlessOptions>>().CurrentValue;
+        PaperlessOptions options = provider.GetRequiredService<IOptionsMonitor<PaperlessOptions>>().CurrentValue;
 
         client.BaseAddress = options.BaseAddress;
         client.DefaultRequestHeaders.UserAgent.Add(_userAgent);

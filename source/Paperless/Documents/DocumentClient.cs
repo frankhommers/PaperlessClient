@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -57,7 +58,7 @@ public sealed class DocumentClient : IDocumentClient
   /// <inheritdoc />
   public IAsyncEnumerable<Document> GetAll(DocumentFilter filter, CancellationToken cancellationToken = default)
   {
-    var uri = new Uri(Routes.Documents.Uri.ToString() + filter.ToQueryString());
+    Uri uri = new(Routes.Documents.Uri.ToString() + filter.ToQueryString());
     return GetAllCore<Document>(uri, cancellationToken);
   }
 
@@ -67,13 +68,15 @@ public sealed class DocumentClient : IDocumentClient
   {
     if (_paperlessOptions.CustomFields.Count is 0)
     {
-      await foreach (var unused in GetCustomFields(cancellationToken).ConfigureAwait(false))
+      await foreach (CustomField? unused in GetCustomFields(cancellationToken).ConfigureAwait(false))
       {
       }
     }
 
-    var documents = GetAllCore<Document<TFields>>(Routes.Documents.Uri, cancellationToken);
-    await foreach (var document in documents.ConfigureAwait(false))
+    IAsyncEnumerable<Document<TFields>>? documents = GetAllCore<Document<TFields>>(
+      Routes.Documents.Uri,
+      cancellationToken);
+    await foreach (Document<TFields>? document in documents.ConfigureAwait(false))
     {
       yield return document;
     }
@@ -86,14 +89,14 @@ public sealed class DocumentClient : IDocumentClient
   {
     if (_paperlessOptions.CustomFields.Count is 0)
     {
-      await foreach (var unused in GetCustomFields(cancellationToken).ConfigureAwait(false))
+      await foreach (CustomField? unused in GetCustomFields(cancellationToken).ConfigureAwait(false))
       {
       }
     }
 
-    var uri = new Uri(Routes.Documents.Uri.ToString() + filter.ToQueryString());
-    var documents = GetAllCore<Document<TFields>>(uri, cancellationToken);
-    await foreach (var document in documents.ConfigureAwait(false))
+    Uri uri = new(Routes.Documents.Uri.ToString() + filter.ToQueryString());
+    IAsyncEnumerable<Document<TFields>> documents = GetAllCore<Document<TFields>>(uri, cancellationToken);
+    await foreach (Document<TFields>? document in documents.ConfigureAwait(false))
     {
       yield return document;
     }
@@ -109,7 +112,7 @@ public sealed class DocumentClient : IDocumentClient
     int pageSize,
     CancellationToken cancellationToken = default)
   {
-    var uri = new Uri(Routes.Documents.PagedUri(pageSize).ToString() + filter.ToQueryString());
+    Uri uri = new(Routes.Documents.PagedUri(pageSize).ToString() + filter.ToQueryString());
     return GetAllCore<Document>(uri, cancellationToken);
   }
 
@@ -120,13 +123,15 @@ public sealed class DocumentClient : IDocumentClient
   {
     if (_paperlessOptions.CustomFields.Count is 0)
     {
-      await foreach (var unused in GetCustomFields(cancellationToken).ConfigureAwait(false))
+      await foreach (CustomField? unused in GetCustomFields(cancellationToken).ConfigureAwait(false))
       {
       }
     }
 
-    var documents = GetAllCore<Document<TFields>>(Routes.Documents.PagedUri(pageSize), cancellationToken);
-    await foreach (var document in documents.ConfigureAwait(false))
+    IAsyncEnumerable<Document<TFields>>? documents = GetAllCore<Document<TFields>>(
+      Routes.Documents.PagedUri(pageSize),
+      cancellationToken);
+    await foreach (Document<TFields>? document in documents.ConfigureAwait(false))
     {
       yield return document;
     }
@@ -140,14 +145,14 @@ public sealed class DocumentClient : IDocumentClient
   {
     if (_paperlessOptions.CustomFields.Count is 0)
     {
-      await foreach (var unused in GetCustomFields(cancellationToken).ConfigureAwait(false))
+      await foreach (CustomField? unused in GetCustomFields(cancellationToken).ConfigureAwait(false))
       {
       }
     }
 
-    var uri = new Uri(Routes.Documents.PagedUri(pageSize).ToString() + filter.ToQueryString());
-    var documents = GetAllCore<Document<TFields>>(uri, cancellationToken);
-    await foreach (var document in documents.ConfigureAwait(false))
+    Uri uri = new(Routes.Documents.PagedUri(pageSize).ToString() + filter.ToQueryString());
+    IAsyncEnumerable<Document<TFields>> documents = GetAllCore<Document<TFields>>(uri, cancellationToken);
+    await foreach (Document<TFields>? document in documents.ConfigureAwait(false))
     {
       yield return document;
     }
@@ -162,7 +167,7 @@ public sealed class DocumentClient : IDocumentClient
   {
     if (_paperlessOptions.CustomFields.Count is 0)
     {
-      await foreach (var unused in GetCustomFields(cancellationToken).ConfigureAwait(false))
+      await foreach (CustomField? unused in GetCustomFields(cancellationToken).ConfigureAwait(false))
       {
       }
     }
@@ -173,7 +178,7 @@ public sealed class DocumentClient : IDocumentClient
   /// <inheritdoc />
   public async Task<DocumentMetadata> GetMetadata(int id, CancellationToken cancellationToken = default)
   {
-    var metadata = await _httpClient
+    DocumentMetadata? metadata = await _httpClient
       .GetFromJsonAsync(
         Routes.Documents.MetadataUri(id),
         _options.GetTypeInfo<DocumentMetadata>(),
@@ -207,7 +212,7 @@ public sealed class DocumentClient : IDocumentClient
   /// <inheritdoc />
   public async Task<DocumentCreationResult> Create(DocumentCreation document)
   {
-    var content = new MultipartFormDataContent();
+    MultipartFormDataContent content = new();
     content.Add(new StreamContent(document.Document), "document", document.FileName);
 
     if (document.Title is { } title)
@@ -235,7 +240,7 @@ public sealed class DocumentClient : IDocumentClient
       content.Add(new StringContent(storagePath.ToString()), "storage_path");
     }
 
-    foreach (var tag in document.TagIds ?? [])
+    foreach (int tag in document.TagIds ?? [])
     {
       content.Add(new StringContent(tag.ToString()), "tags");
     }
@@ -245,19 +250,22 @@ public sealed class DocumentClient : IDocumentClient
       content.Add(new StringContent(archiveSerialNumber.ToString()), "archive_serial_number");
     }
 
-    using var response = await _httpClient.PostAsync(Routes.Documents.CreateUri, content).ConfigureAwait(false);
+    using HttpResponseMessage? response =
+      await _httpClient.PostAsync(Routes.Documents.CreateUri, content).ConfigureAwait(false);
     await response.EnsureSuccessStatusCodeAsync().ConfigureAwait(false);
 
     // Until v1.9.2 paperless did not return the document import task id,
     // so it is not possible to get the document id
-    var versionHeader = response.Headers.GetValues("x-version").SingleOrDefault();
-    if (versionHeader is null || !Version.TryParse(versionHeader, out var version) || version <= _documentIdVersion)
+    string? versionHeader = response.Headers.GetValues("x-version").SingleOrDefault();
+    if (versionHeader is null ||
+        !Version.TryParse(versionHeader, out Version? version) ||
+        version <= _documentIdVersion)
     {
       return new ImportStarted();
     }
 
-    var id = await response.Content.ReadFromJsonAsync(_options.GetTypeInfo<Guid>()).ConfigureAwait(false);
-    var task = await _taskClient.Get(id).ConfigureAwait(false);
+    Guid id = await response.Content.ReadFromJsonAsync(_options.GetTypeInfo<Guid>()).ConfigureAwait(false);
+    PaperlessTask? task = await _taskClient.Get(id).ConfigureAwait(false);
 
     while (task is not null && !task.Status.IsCompleted)
     {
@@ -284,7 +292,7 @@ public sealed class DocumentClient : IDocumentClient
   {
     if (_paperlessOptions.CustomFields.Count is 0)
     {
-      await foreach (var unused in GetCustomFields().ConfigureAwait(false))
+      await foreach (CustomField? unused in GetCustomFields().ConfigureAwait(false))
       {
       }
     }
@@ -295,7 +303,8 @@ public sealed class DocumentClient : IDocumentClient
   /// <inheritdoc />
   public async Task Delete(int id)
   {
-    using var response = await _httpClient.DeleteAsync(Routes.Documents.IdUri(id)).ConfigureAwait(false);
+    using HttpResponseMessage? response =
+      await _httpClient.DeleteAsync(Routes.Documents.IdUri(id)).ConfigureAwait(false);
     await response.EnsureSuccessStatusCodeAsync().ConfigureAwait(false);
   }
 
@@ -310,13 +319,13 @@ public sealed class DocumentClient : IDocumentClient
   /// <inheritdoc />
   public async Task<CustomField> CreateCustomField(CustomFieldCreation field)
   {
-    using var response = await _httpClient
+    using HttpResponseMessage? response = await _httpClient
       .PostAsJsonAsync(Routes.CustomFields.Uri, field, _options.GetTypeInfo<CustomFieldCreation>())
       .ConfigureAwait(false);
 
     await response.EnsureSuccessStatusCodeAsync().ConfigureAwait(false);
 
-    var createdField = (await response.Content.ReadFromJsonAsync(_options.GetTypeInfo<CustomField>())
+    CustomField? createdField = (await response.Content.ReadFromJsonAsync(_options.GetTypeInfo<CustomField>())
       .ConfigureAwait(false))!;
     _paperlessOptions.CustomFields.AddOrUpdate(createdField.Id, createdField, (_, _) => createdField);
 
@@ -339,7 +348,7 @@ public sealed class DocumentClient : IDocumentClient
     where TDocument : Document
     where TUpdate : DocumentUpdate
   {
-    using var response = await _httpClient
+    using HttpResponseMessage? response = await _httpClient
       .PatchAsJsonAsync(Routes.Documents.IdUri(id), update, _options.GetTypeInfo<TUpdate>())
       .ConfigureAwait(false);
 
@@ -352,11 +361,11 @@ public sealed class DocumentClient : IDocumentClient
     Uri requestUri,
     CancellationToken cancellationToken = default)
   {
-    var response = await _httpClient.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
+    HttpResponseMessage? response = await _httpClient.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
 
     await response.EnsureSuccessStatusCodeAsync().ConfigureAwait(false);
 
-    var headers = response.Content.Headers;
+    HttpContentHeaders? headers = response.Content.Headers;
 
     return new(
 #if NETSTANDARD2_0
@@ -372,12 +381,12 @@ public sealed class DocumentClient : IDocumentClient
     Uri requestUri,
     [EnumeratorCancellation] CancellationToken cancellationToken)
   {
-    var fields = _httpClient.GetPaginated(
+    IAsyncEnumerable<CustomField>? fields = _httpClient.GetPaginated(
       requestUri,
       _options.GetTypeInfo<PaginatedList<CustomField>>(),
       cancellationToken);
 
-    await foreach (var field in fields.ConfigureAwait(false))
+    await foreach (CustomField? field in fields.ConfigureAwait(false))
     {
       _paperlessOptions.CustomFields.AddOrUpdate(field.Id, field, (_, _) => field);
       yield return field;

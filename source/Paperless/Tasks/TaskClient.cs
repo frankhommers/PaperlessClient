@@ -39,7 +39,7 @@ public sealed class TaskClient : ITaskClient
   /// <inheritdoc />
   public async Task<PaperlessTask?> Get(Guid taskId, CancellationToken cancellationToken = default)
   {
-    var tasks = await _httpClient
+    List<PaperlessTask>? tasks = await _httpClient
       .GetFromJsonAsync(
         Routes.Tasks.IdUri(taskId),
         _options.GetTypeInfo<List<PaperlessTask>>(),

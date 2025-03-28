@@ -18,15 +18,15 @@ public sealed class CorrespondentClientTests(PaperlessFixture paperlessFixture) 
   [Test]
   public async Task Create_ShouldCreateExpected()
   {
-    var creation = new CorrespondentCreation("Acme Company")
+    CorrespondentCreation creation = new("Acme Company")
     {
       Slug = "acme-company",
       Match = "acme company",
       IsInsensitive = true,
-      MatchingAlgorithm = MatchingAlgorithm.ExactMatch
+      MatchingAlgorithm = MatchingAlgorithm.ExactMatch,
     };
 
-    var correspondent = await Client.Correspondents.Create(creation);
+    Correspondent correspondent = await Client.Correspondents.Create(creation);
 
     using (new AssertionScope())
     {
@@ -38,7 +38,7 @@ public sealed class CorrespondentClientTests(PaperlessFixture paperlessFixture) 
         .Should()
         .BeEquivalentTo(correspondent);
 
-      var correspondents = await Client.Correspondents.GetAll().ToListAsync();
+      List<Correspondent> correspondents = await Client.Correspondents.GetAll().ToListAsync();
       correspondents.Should().ContainSingle().Which.Should().BeEquivalentTo(correspondent);
     }
 
@@ -50,10 +50,10 @@ public sealed class CorrespondentClientTests(PaperlessFixture paperlessFixture) 
   [Test]
   public async Task GetAll_PageSizeShouldNotChangeResult()
   {
-    var correspondents = new List<Correspondent>();
-    for (var i = 0; i < 5; i++)
+    List<Correspondent> correspondents = new();
+    for (int i = 0; i < 5; i++)
     {
-      var creation = new CorrespondentCreation(Guid.NewGuid().ToString("N"));
+      CorrespondentCreation creation = new(Guid.NewGuid().ToString("N"));
       correspondents.Add(await Client.Correspondents.Create(creation));
     }
 
@@ -63,6 +63,9 @@ public sealed class CorrespondentClientTests(PaperlessFixture paperlessFixture) 
       (await Client.Correspondents.GetAll(1).ToListAsync()).Should().BeEquivalentTo(correspondents);
     }
 
-    foreach (var correspondent in correspondents) await Client.Correspondents.Delete(correspondent.Id);
+    foreach (Correspondent correspondent in correspondents)
+    {
+      await Client.Correspondents.Delete(correspondent.Id);
+    }
   }
 }

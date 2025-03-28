@@ -26,17 +26,18 @@ public sealed class MinimalExampleTests : PaperlessTests
   public MinimalExampleTests(PaperlessFixture paperlessFixture)
     : base(paperlessFixture)
   {
-    var options = paperlessFixture.Options;
+    PaperlessOptions? options = paperlessFixture.Options;
 
-    var httpClient = new HttpClient { BaseAddress = options.BaseAddress };
+    HttpClient? httpClient = new()
+      { BaseAddress = options.BaseAddress };
     httpClient.DefaultRequestHeaders.Add("Accept", $"{MediaTypeNames.Application.Json}; version=2");
     httpClient.DefaultRequestHeaders.Authorization = new("Token", options.Token);
 
-    var serializerOptions = new PaperlessJsonSerializerOptions(DateTimeZoneProviders.Tzdb);
-    var taskClient = new TaskClient(httpClient, serializerOptions);
-    var correspondentClient = new CorrespondentClient(httpClient, serializerOptions);
-    var documentClient = new DocumentClient(httpClient, serializerOptions, taskClient, options.TaskPollingDelay);
-    var tagClient = new TagClient(httpClient, serializerOptions);
+    PaperlessJsonSerializerOptions serializerOptions = new(DateTimeZoneProviders.Tzdb);
+    TaskClient taskClient = new(httpClient, serializerOptions);
+    CorrespondentClient correspondentClient = new(httpClient, serializerOptions);
+    DocumentClient documentClient = new(httpClient, serializerOptions, taskClient, options.TaskPollingDelay);
+    TagClient tagClient = new(httpClient, serializerOptions);
 
     _paperlessClient = new PaperlessClient(correspondentClient, documentClient, tagClient);
   }

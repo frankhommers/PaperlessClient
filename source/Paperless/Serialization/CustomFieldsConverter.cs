@@ -38,42 +38,44 @@ public sealed class CustomFieldsConverter<TFields> : JsonConverter<TFields>
     // First pass - list with field ids and values to an object with actual custom field names
     if (reader.TokenType is JsonTokenType.StartArray)
     {
-      var fields = JsonSerializer.Deserialize(ref reader, options.GetTypeInfo<List<CustomFieldValue>>());
+      List<CustomFieldValue>? fields = JsonSerializer.Deserialize(
+        ref reader,
+        options.GetTypeInfo<List<CustomFieldValue>>());
       if (fields is null || fields.Count is 0)
       {
         return null;
       }
 
-      var namedFields = fields.ToDictionary(
+      Dictionary<string, JsonNode>? namedFields = fields.ToDictionary(
         response => _options.CustomFields[response.Field].Name,
         response => response.Value);
 
-      var text = JsonSerializer.Serialize(
+      string? text = JsonSerializer.Serialize(
         namedFields,
         _options.Options.GetTypeInfo<Dictionary<string, JsonNode>>());
       return JsonSerializer.Deserialize(text, _options.Options.GetTypeInfo<TFields>());
     }
 
-    var cleanedOptions = GetCleanOptions(options);
+    JsonSerializerOptions? cleanedOptions = GetCleanOptions(options);
     return JsonSerializer.Deserialize(ref reader, cleanedOptions.GetTypeInfo<TFields>());
   }
 
   /// <inheritdoc />
   public override void Write(Utf8JsonWriter writer, TFields value, JsonSerializerOptions options)
   {
-    var cleanedOptions = GetCleanOptions(options);
-    var document = JsonSerializer.SerializeToDocument(value, cleanedOptions.GetTypeInfo<TFields>());
+    JsonSerializerOptions cleanedOptions = GetCleanOptions(options);
+    JsonDocument document = JsonSerializer.SerializeToDocument(value, cleanedOptions.GetTypeInfo<TFields>());
 
     writer.WriteStartArray();
 
-    foreach (var property in document.RootElement.EnumerateObject())
+    foreach (JsonProperty property in document.RootElement.EnumerateObject())
     {
       if (property.Value.ValueKind is Null && options.DefaultIgnoreCondition is not Never)
       {
         continue;
       }
 
-      var customField = _options.CustomFields.Values.SingleOrDefault(field => field.Name == property.Name);
+      CustomField? customField = _options.CustomFields.Values.SingleOrDefault(field => field.Name == property.Name);
       if (customField is null)
       {
         throw new JsonException();
@@ -109,7 +111,7 @@ public sealed class CustomFieldsConverter<TFields> : JsonConverter<TFields>
       {
         writer.WriteStartArray();
 
-        foreach (var element in property.Value.EnumerateArray())
+        foreach (JsonElement element in property.Value.EnumerateArray())
         {
           writer.WriteNumberValue(element.GetInt32());
         }
@@ -128,8 +130,9 @@ public sealed class CustomFieldsConverter<TFields> : JsonConverter<TFields>
   /// <summary>Copy the options and remove this converter in order to fall back to the actual serialization logic.</summary>
   private static JsonSerializerOptions GetCleanOptions(JsonSerializerOptions options)
   {
-    var clonedOptions = new JsonSerializerOptions(options);
-    var converter = clonedOptions.Converters.OfType<CustomFieldsConverter<TFields>>().Single();
+    JsonSerializerOptions clonedOptions = new(options);
+    CustomFieldsConverter<TFields>? converter =
+      clonedOptions.Converters.OfType<CustomFieldsConverter<TFields>>().Single();
     clonedOptions.Converters.Remove(converter);
 
     return clonedOptions;

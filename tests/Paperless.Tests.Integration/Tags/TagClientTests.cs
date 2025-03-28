@@ -4,6 +4,7 @@
 // ---
 // Copyright 2025 Frank Hommers
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,17 +18,18 @@ public sealed class TagClientTests(PaperlessFixture paperlessFixture) : Paperles
   [Test]
   public async Task CreateGetDelete()
   {
-    var createdTag = await Client.Tags.Create(new("Foo bar")
-    {
-      Match = "foo",
-      MatchingAlgorithm = MatchingAlgorithm.ExactMatch,
-      IsInsensitive = true,
-      IsInboxTag = true
-    });
+    Tag createdTag = await Client.Tags.Create(
+      new("Foo bar")
+      {
+        Match = "foo",
+        MatchingAlgorithm = MatchingAlgorithm.ExactMatch,
+        IsInsensitive = true,
+        IsInboxTag = true,
+      });
 
-    var tag = (await Client.Tags.Get(createdTag.Id))!;
-    var tags = await Client.Tags.GetAll().ToListAsync();
-    var paginatedTags = await Client.Tags.GetAll(1).ToListAsync();
+    Tag tag = (await Client.Tags.Get(createdTag.Id))!;
+    List<Tag> tags = await Client.Tags.GetAll().ToListAsync();
+    List<Tag> paginatedTags = await Client.Tags.GetAll(1).ToListAsync();
 
     using (new AssertionScope())
     {

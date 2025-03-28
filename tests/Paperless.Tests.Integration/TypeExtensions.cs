@@ -15,16 +15,19 @@ internal static class TypeExtensions
 {
   internal static Stream GetResource(this Type type, string resourceName)
   {
-    var stream = type.Assembly.GetManifestResourceStream(type, resourceName);
-    if (stream is not null) return stream;
+    Stream? stream = type.Assembly.GetManifestResourceStream(type, resourceName);
+    if (stream is not null)
+    {
+      return stream;
+    }
 
     throw new MissingManifestResourceException($"Could not find {resourceName} is namespace {type.Namespace}");
   }
 
   internal static async Task<string> ReadResource(this Type type, string resourceName)
   {
-    await using var stream = type.GetResource(resourceName);
-    using var streamReader = new StreamReader(stream);
+    await using Stream? stream = type.GetResource(resourceName);
+    using StreamReader? streamReader = new(stream);
     return await streamReader.ReadToEndAsync();
   }
 }

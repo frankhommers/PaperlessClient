@@ -17,25 +17,26 @@ namespace Paperless.DependencyInjection.Tests;
 public sealed class ServiceCollectionExtensionsTests
 {
   private readonly IConfiguration _configuration = new ConfigurationBuilder()
-    .AddInMemoryCollection(new List<KeyValuePair<string, string?>>
-    {
-      new($"{PaperlessOptions.Name}:{nameof(PaperlessOptions.BaseAddress)}", "https://localhost:5002/"),
-      new($"{PaperlessOptions.Name}:{nameof(PaperlessOptions.Token)}", Guid.NewGuid().ToString("N"))
-    })
+    .AddInMemoryCollection(
+      new List<KeyValuePair<string, string?>>
+      {
+        new($"{PaperlessOptions.Name}:{nameof(PaperlessOptions.BaseAddress)}", "https://localhost:5002/"),
+        new($"{PaperlessOptions.Name}:{nameof(PaperlessOptions.Token)}", Guid.NewGuid().ToString("N")),
+      })
     .Build();
 
   [Fact]
   public void AddPaperlessClient_ExplicitConfiguration_ShouldRegisterRequiredServices()
   {
-    var serviceCollection = new ServiceCollection();
+    ServiceCollection? serviceCollection = new();
 
     serviceCollection
       .AddSingleton<IClock>(SystemClock.Instance)
       .AddSingleton(DateTimeZoneProviders.Tzdb)
       .AddPaperlessClient(_configuration);
 
-    using var serviceProvider = serviceCollection.BuildServiceProvider();
-    var paperlessClient = serviceProvider.GetRequiredService<IPaperlessClient>();
+    using ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
+    IPaperlessClient paperlessClient = serviceProvider.GetRequiredService<IPaperlessClient>();
 
     paperlessClient.Should().NotBeNull();
   }
@@ -43,7 +44,7 @@ public sealed class ServiceCollectionExtensionsTests
   [Fact]
   public void AddPaperlessClient_ShouldRegisterRequiredServices()
   {
-    var serviceCollection = new ServiceCollection();
+    ServiceCollection? serviceCollection = new();
 
     serviceCollection
       .AddSingleton(_configuration)
@@ -51,8 +52,8 @@ public sealed class ServiceCollectionExtensionsTests
       .AddSingleton(DateTimeZoneProviders.Tzdb)
       .AddPaperlessClient();
 
-    using var serviceProvider = serviceCollection.BuildServiceProvider();
-    var paperlessClient = serviceProvider.GetRequiredService<IPaperlessClient>();
+    using ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
+    IPaperlessClient paperlessClient = serviceProvider.GetRequiredService<IPaperlessClient>();
 
     paperlessClient.Should().NotBeNull();
   }

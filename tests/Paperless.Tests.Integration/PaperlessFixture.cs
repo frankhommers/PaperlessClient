@@ -24,6 +24,7 @@ using Testcontainers.Redis;
 using Paperless.DependencyInjection;
 using Paperless.Serialization;
 using Paperless.Tests.Integration.Documents;
+
 using VMelnalksnis.Testcontainers.Paperless;
 
 namespace Paperless.Tests.Integration;
@@ -53,7 +54,7 @@ public sealed class PaperlessFixture : IAsyncDisposable
       .WithNetworkAliases(redis)
       .Build();
 
-    var builder = new PaperlessBuilder()
+    PaperlessBuilder builder = new PaperlessBuilder()
       .WithImage($"{PaperlessBuilder.PaperlessImage}:{paperlessVersion}")
       .WithNetwork(_network)
       .DependsOn(_redis)
@@ -82,22 +83,23 @@ public sealed class PaperlessFixture : IAsyncDisposable
   {
     await _paperless.StartAsync();
 
-    var baseAddress = _paperless.GetBaseAddress();
-    var token = await _paperless.GetAdminToken();
+    Uri baseAddress = _paperless.GetBaseAddress();
+    string token = await _paperless.GetAdminToken();
     Options = new() { BaseAddress = baseAddress, Token = token };
   }
 
   internal ServiceProvider GetServiceProvider()
   {
-    var configuration = new ConfigurationBuilder()
-      .AddInMemoryCollection(new List<KeyValuePair<string, string?>>
-      {
-        new("Paperless:BaseAddress", Options.BaseAddress.ToString()),
-        new("Paperless:Token", Options.Token)
-      })
+    IConfigurationRoot configuration = new ConfigurationBuilder()
+      .AddInMemoryCollection(
+        new List<KeyValuePair<string, string?>>
+        {
+          new("Paperless:BaseAddress", Options.BaseAddress.ToString()),
+          new("Paperless:Token", Options.Token),
+        })
       .Build();
 
-    var serviceCollection = new ServiceCollection();
+    ServiceCollection serviceCollection = new();
     serviceCollection
       .AddSingleton(DateTimeZoneProviders.Tzdb)
       .AddSingleton(Clock)
@@ -110,13 +112,15 @@ public sealed class PaperlessFixture : IAsyncDisposable
         })
       .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(5));
 
-    serviceCollection.AddLogging(builder => builder
-      .SetMinimumLevel(LogLevel.Trace)
-      .AddSimpleConsole(options =>
-      {
-        options.ColorBehavior = LoggerColorBehavior.Enabled;
-        options.IncludeScopes = true;
-      }));
+    serviceCollection.AddLogging(
+      builder => builder
+        .SetMinimumLevel(LogLevel.Trace)
+        .AddSimpleConsole(
+          options =>
+          {
+            options.ColorBehavior = LoggerColorBehavior.Enabled;
+            options.IncludeScopes = true;
+          }));
 
     return serviceCollection.BuildServiceProvider(true);
   }

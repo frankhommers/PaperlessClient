@@ -55,7 +55,7 @@ public sealed class TagClient : ITagClient
   /// <inheritdoc />
   public async Task Delete(int id)
   {
-    using var response = await _httpClient.DeleteAsync(Routes.Tags.IdUri(id)).ConfigureAwait(false);
+    using HttpResponseMessage? response = await _httpClient.DeleteAsync(Routes.Tags.IdUri(id)).ConfigureAwait(false);
     await response.EnsureSuccessStatusCodeAsync().ConfigureAwait(false);
   }
 

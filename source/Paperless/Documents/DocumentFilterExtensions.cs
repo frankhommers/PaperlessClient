@@ -137,7 +137,7 @@ internal static class DocumentFilterExtensions
 
     if (value is IEnumerable<int> intValues)
     {
-      var valueString = string.Join(",", intValues);
+      string? valueString = string.Join(",", intValues);
       if (!string.IsNullOrEmpty(valueString))
       {
         parameters.Add($"{name}={HttpUtility.UrlEncode(valueString)}");

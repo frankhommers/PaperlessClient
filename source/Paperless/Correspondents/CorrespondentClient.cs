@@ -56,7 +56,8 @@ public sealed class CorrespondentClient : ICorrespondentClient
   /// <inheritdoc />
   public async Task Delete(int id)
   {
-    using var response = await _httpClient.DeleteAsync(Routes.Correspondents.IdUri(id)).ConfigureAwait(false);
+    using HttpResponseMessage? response =
+      await _httpClient.DeleteAsync(Routes.Correspondents.IdUri(id)).ConfigureAwait(false);
     await response.EnsureSuccessStatusCodeAsync().ConfigureAwait(false);
   }
 
